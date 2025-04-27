@@ -57,3 +57,7 @@ clean:
 	rm -f $(SRC)/*.lst
 	rm -f $(OBJ)/*.o os sched mem
 	rm -rf $(OBJ)
+	rm -rf obj
+	rm -f *.o
+	find . -name "*.czone" -delete
+	find . -name "*:Zone.Identifier" -delete

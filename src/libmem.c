@@ -327,12 +327,6 @@ int pg_setval(struct mm_struct *mm, int addr, BYTE value, struct pcb_t *caller) 
 
     int phyaddr = (fpn << PAGING_ADDR_FPN_LOBIT) + off;
     MEMPHY_write(caller->mram, phyaddr, value);
-    // struct sc_regs regs;
-    // regs.a1 = SYSMEM_IO_WRITE;
-    // regs.a2 = phyaddr;
-    // regs.a3 = value;
-  
-    // syscall(caller, 17, &regs);
 
     return 0;
 }
@@ -347,29 +341,8 @@ int pg_getval(struct mm_struct *mm, int addr, BYTE *data, struct pcb_t *caller)
   if (pg_getpage(mm, pgn, &fpn, caller) != 0)
     return -1; /* invalid page access */
 
-  /* TODO
-   *  MEMPHY_read(caller->mram, phyaddr, data);
-   *  MEMPHY READ
-   *  SYSCALL 17 sys_memmap with SYSMEM_IO_READ
-   */
   int phyaddr = (fpn << PAGING_ADDR_FPN_LOBIT) + off;
-
   MEMPHY_read(caller->mram,phyaddr, data);
-    // struct sc_regs regs;
-    // regs.a1 = SYSMEM_IO_READ;
-    // regs.a2 = phyaddr;
-    // regs.a3 = (uint32_t)(*data);
-
-    // syscall(caller, 17, &regs);
-  //struct sc_regs regs;
-  //regs.a1 = ...
-  //regs.a2 = ...
-  //regs.a3 = ...
-
-  /* SYSCALL 17 sys_memmap */
-  // syscall(caller, 17, &regs);
-  // Update data
-  // *data = (BYTE)regs.a3;
 
   return 0;
 }
@@ -406,12 +379,14 @@ int libread(struct pcb_t *proc, uint32_t source, uint32_t offset, uint32_t *dest
 }
 
 int __write(struct pcb_t *caller, int vmaid, int rgid, int offset, BYTE value) {
+    pthread_mutex_lock(&mmvm_lock);
     struct vm_rg_struct *currg = get_symrg_byid(caller->mm, rgid);
     struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
 
     if (currg == NULL || cur_vma == NULL)
         return -1;
 
+    pthread_mutex_unlock(&mmvm_lock);
     return pg_setval(caller->mm, currg->rg_start + offset, value, caller);
 }
 

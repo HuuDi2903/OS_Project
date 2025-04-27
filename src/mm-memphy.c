@@ -164,6 +164,7 @@ int MEMPHY_dump(struct memphy_struct *mp)
    *     for tracing the memory content
    */
   // Following the expected format
+   printf("================================================================\n");
    printf("===== PHYSICAL MEMORY DUMP =====\n");
    for (int i = 0; i < mp->maxsz; ++i)
    {
@@ -172,6 +173,9 @@ int MEMPHY_dump(struct memphy_struct *mp)
          printf("BYTE %08x: %d\n", i, mp->storage[i]);
       }
    }
+   printf("===== PHYSICAL MEMORY END-DUMP =====\n");
+   printf("================================================================\n");
+
    return 0;
 }
 
@@ -208,4 +212,3 @@ int init_memphy(struct memphy_struct *mp, int max_size, int randomflg)
 }
 
 // #endif
-

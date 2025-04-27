@@ -421,6 +421,7 @@ int vmap_page_range(struct pcb_t *caller,           // process call
    pgn_start = PAGING_PGN(start);
    pgn_end = PAGING_PGN(end);
  
+   printf("================================================================\n");
    printf("print_pgtbl: %d - %d", start, end);
    if (caller == NULL) { printf("NULL caller\n"); return -1;}
    printf("\n");

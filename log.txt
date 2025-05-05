@@ -1,0 +1,2 @@
+libmem.c: fix _alloc - remaining free region
+sys_killall.c: fix update number of terminated proc

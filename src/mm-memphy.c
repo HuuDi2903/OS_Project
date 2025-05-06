@@ -8,6 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 /*
 *  MEMPHY_mv_csr - move MEMPHY cursor
@@ -164,6 +167,7 @@ int MEMPHY_dump(struct memphy_struct *mp)
    *     for tracing the memory content
    */
   // Following the expected format
+   pthread_mutex_lock(&lock);
    printf("===== PHYSICAL MEMORY DUMP =====\n");
    for (int i = 0; i < mp->maxsz; ++i)
    {
@@ -172,6 +176,10 @@ int MEMPHY_dump(struct memphy_struct *mp)
          printf("BYTE %08x: %d\n", i, mp->storage[i]);
       }
    }
+   printf("===== PHYSICAL MEMORY END-DUMP =====\n");
+   printf("================================================================\n");
+
+   pthread_mutex_unlock(&lock);
    return 0;
 }
 

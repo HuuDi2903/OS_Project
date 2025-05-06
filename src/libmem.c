@@ -71,7 +71,7 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
 
    if (get_free_vmrg_area(caller, vmaid, size, &rgnode) == 0)
    { 
-     printf("##### HAVE FREE REGION #####\n");
+    //  printf("##### HAVE FREE REGION #####\n");
      caller->mm->symrgtbl[rgid].rg_start = rgnode.rg_start;
      caller->mm->symrgtbl[rgid].rg_end = rgnode.rg_end; 
      *alloc_addr = rgnode.rg_start;
@@ -109,7 +109,7 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
    }
    else {
      // Handle heap expansion
-     printf("##### HEAP EXPANSION #####\n");
+    //  printf("##### HEAP EXPANSION #####\n");
      struct vm_area_struct *cur_vma = get_vma_by_num(caller->mm, vmaid);
      if (!cur_vma) {
          printf("Process %d: Invalid VMA ID %d\n", caller->pid, vmaid);
@@ -131,12 +131,13 @@ int __alloc(struct pcb_t *caller, int vmaid, int rgid, int size, int *alloc_addr
      *alloc_addr = old_sbrk;
 
     // Handle remaining free space
-    struct vm_area_struct *remain_rg = get_vma_by_num(caller->mm, vmaid);
-    if (old_sbrk + size < remain_rg->sbrk) {
-        struct vm_rg_struct *rg_free = malloc(sizeof(struct vm_rg_struct));
-        rg_free->rg_start = old_sbrk + size;
-        rg_free->rg_end = remain_rg->sbrk;
-        enlist_vm_freerg_list(caller->mm, rg_free);
+    struct vm_area_struct *remaining_rg = get_vma_by_num(caller->mm, vmaid);
+
+    if (old_sbrk + inc_sz < remaining_rg->sbrk) {
+        struct vm_rg_struct *new_rg = malloc(sizeof(struct vm_rg_struct));
+        new_rg->rg_start = old_sbrk + inc_sz;
+        new_rg->rg_end = remaining_rg->sbrk;
+        enlist_vm_freerg_list(caller->mm, new_rg);
     }
 
     //  // Only create free region if there's actual space left
@@ -428,6 +429,8 @@ int __write(struct pcb_t *caller, int vmaid, int rgid, int offset, BYTE value) {
 }
 
 int libwrite(struct pcb_t *proc, BYTE data, uint32_t destination, uint32_t offset) {
+    int val = __write(proc, 0, destination, offset, data);
+
 #ifdef IODUMP
     printf("===== PHYSICAL MEMORY AFTER WRITING =====\n");
     printf("write region=%d offset=%d value=%d\n", destination, offset, data);
@@ -437,7 +440,7 @@ int libwrite(struct pcb_t *proc, BYTE data, uint32_t destination, uint32_t offse
     MEMPHY_dump(proc->mram);
 #endif
 
-    return __write(proc, 0, destination, offset, data);
+    return val;
 }
 
 int free_pcb_memph(struct pcb_t *caller) {
@@ -501,8 +504,8 @@ int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_s
     
         // Search for a region with sufficient space
         while (rgit) {
-            printf("Examining free region: %lu - %lu (size %lu)\n", 
-                   rgit->rg_start, rgit->rg_end, rgit->rg_end - rgit->rg_start);
+            // printf("Examining free region: %lu - %lu (size %lu)\n", 
+            //        rgit->rg_start, rgit->rg_end, rgit->rg_end - rgit->rg_start);
 
             // Check if current region has enough space
             if (rgit->rg_start + size <= rgit->rg_end) {
@@ -510,8 +513,8 @@ int get_free_vmrg_area(struct pcb_t *caller, int vmaid, int size, struct vm_rg_s
                 newrg->rg_start = rgit->rg_start;
                 newrg->rg_end = rgit->rg_start + size;
                 
-                printf("Allocated region: %lu - %lu (size %d)\n", 
-                       newrg->rg_start, newrg->rg_end, size);
+                // printf("Allocated region: %lu - %lu (size %d)\n", 
+                //        newrg->rg_start, newrg->rg_end, size);
     
                 // Update the free region list
                 if (rgit->rg_start + size < rgit->rg_end) {
